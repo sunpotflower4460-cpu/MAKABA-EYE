@@ -16,6 +16,8 @@ import type { Vec3 } from '../geometry/types';
 
 // ─── CameraTracker ────────────────────────────────────────────────────────────
 
+const CAMERA_METRICS_THROTTLE_SECONDS = 0.15;
+
 function CameraTracker() {
   const setCameraMetrics = useMerkabaStore(s => s.setCameraMetrics);
   const { camera } = useThree();
@@ -23,7 +25,7 @@ function CameraTracker() {
 
   useFrame(({ clock }) => {
     const elapsed = clock.getElapsedTime();
-    if (elapsed - lastUpdateRef.current < 0.15) return;
+    if (elapsed - lastUpdateRef.current < CAMERA_METRICS_THROTTLE_SECONDS) return;
     lastUpdateRef.current = elapsed;
 
     const dist = camera.position.length();
