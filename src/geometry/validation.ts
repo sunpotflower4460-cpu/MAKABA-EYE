@@ -71,7 +71,7 @@ export function validateEqualEdgeLengths(
   return check(
     checkId,
     expected,
-    expected + (maxDelta > threshold ? maxDelta : maxDelta),
+    expected + maxDelta,
     threshold,
     epsilon,
   );
