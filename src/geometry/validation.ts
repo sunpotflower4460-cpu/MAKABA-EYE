@@ -63,8 +63,8 @@ export function validateEqualEdgeLengths(
   ] as const;
   const lengths = edges.map(([a, b]) => dist(verts[a], verts[b]));
   const expected = lengths[0];
-  let minLen = lengths[0];
-  let maxLen = lengths[0];
+  let minLen = expected;
+  let maxLen = expected;
   let maxDelta = 0;
   for (const l of lengths) {
     if (l < minLen) minLen = l;

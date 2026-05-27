@@ -17,6 +17,7 @@ import type { Vec3 } from '../geometry/types';
 // ─── CameraTracker ────────────────────────────────────────────────────────────
 
 const CAMERA_METRICS_THROTTLE_SECONDS = 0.15;
+const CAMERA_DISTANCE_EPSILON = 1e-8;
 
 function CameraTracker() {
   const setCameraMetrics = useMerkabaStore(s => s.setCameraMetrics);
@@ -29,7 +30,7 @@ function CameraTracker() {
     lastUpdateRef.current = elapsed;
 
     const dist = camera.position.length();
-    if (dist <= 1e-8) {
+    if (dist <= CAMERA_DISTANCE_EPSILON) {
       setCameraMetrics({ distance: 0, azimuthal: 0, polar: 0 });
       return;
     }
