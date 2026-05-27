@@ -4,6 +4,7 @@ import { buildCanonicalMerkaba } from './merkaba';
 import { computeGeometrySummary } from './metrics';
 
 const DEFAULT_EPSILON = 1e-6;
+const VALIDATION_DECIMALS = 8;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ function check(
   actualVal: number,
   threshold: number,
   epsilon: number,
-  decimals = 8,
+  decimals = VALIDATION_DECIMALS,
 ): ValidationCheck {
   const delta = Math.abs(expectedVal - actualVal);
   const ok = delta <= threshold;
@@ -76,8 +77,8 @@ export function validateEqualEdgeLengths(
   return {
     id: checkId,
     ok: maxDelta <= threshold,
-    expected: expected.toFixed(8),
-    actual: `min=${minLen.toFixed(8)}, max=${maxLen.toFixed(8)}`,
+    expected: expected.toFixed(VALIDATION_DECIMALS),
+    actual: `min=${minLen.toFixed(VALIDATION_DECIMALS)}, max=${maxLen.toFixed(VALIDATION_DECIMALS)}`,
     delta: maxDelta,
     epsilon,
   };
@@ -101,7 +102,7 @@ export function validateSharedCenter(
     id: 'shared-center',
     ok,
     expected: '0.000000',
-    actual: maxD.toFixed(8),
+    actual: maxD.toFixed(VALIDATION_DECIMALS),
     delta: maxD,
     epsilon,
   };
@@ -130,7 +131,7 @@ export function validateCubeCorrespondence(
     id: 'cube-correspondence',
     ok: maxD <= threshold,
     expected: '0.000000',
-    actual: maxD.toFixed(8),
+    actual: maxD.toFixed(VALIDATION_DECIMALS),
     delta: maxD,
     epsilon,
   };
@@ -161,7 +162,7 @@ export function validateInnerOctahedronVertices(
     id: 'inner-octahedron',
     ok: maxD <= threshold,
     expected: '0.000000',
-    actual: maxD.toFixed(8),
+    actual: maxD.toFixed(VALIDATION_DECIMALS),
     delta: maxD,
     epsilon,
   };
@@ -182,7 +183,7 @@ export function validateOriginCenter(
     id: 'origin-center',
     ok: d <= threshold,
     expected: '0.000000',
-    actual: d.toFixed(8),
+    actual: d.toFixed(VALIDATION_DECIMALS),
     delta: d,
     epsilon,
   };
@@ -214,8 +215,8 @@ export function validateScaleInvariance(
   return {
     id: 'scale-invariance',
     ok: delta <= threshold,
-    expected: expectedTetraEdge.toFixed(8),
-    actual: actualTetraEdge.toFixed(8),
+    expected: expectedTetraEdge.toFixed(VALIDATION_DECIMALS),
+    actual: actualTetraEdge.toFixed(VALIDATION_DECIMALS),
     delta,
     epsilon,
   };
@@ -246,7 +247,7 @@ export function validateGeometrySelfConsistency(
     id: 'geometry-self-consistency',
     ok: maxD <= threshold,
     expected: '0.000000',
-    actual: maxD.toFixed(8),
+    actual: maxD.toFixed(VALIDATION_DECIMALS),
     delta: maxD,
     epsilon,
   };
