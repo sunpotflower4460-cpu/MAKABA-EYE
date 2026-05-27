@@ -188,7 +188,8 @@ export function tetraDihedralAngle(verts: Vec3[]): number {
   const n1 = faceNormal(v0, v1, v2);
   const n2 = faceNormal(v0, v1, v3);
   const dot = n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2];
-  // clamp for numerical safety
+  // Use the interior angle between adjacent faces; abs(dot) keeps this winding-independent
+  // for the two tetrahedra, whose face orderings are mirrored.
   return Math.acos(Math.max(-1, Math.min(1, Math.abs(dot))));
 }
 

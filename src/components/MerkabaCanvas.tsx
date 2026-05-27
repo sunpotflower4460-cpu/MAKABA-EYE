@@ -1,4 +1,5 @@
-import { useRef, useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import type { RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -18,11 +19,21 @@ import type { Vec3 } from '../geometry/types';
 function CameraTracker() {
   const setCameraMetrics = useMerkabaStore(s => s.setCameraMetrics);
   const { camera } = useThree();
+  const lastUpdateRef = useRef(Number.NEGATIVE_INFINITY);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
+    const elapsed = clock.getElapsedTime();
+    if (elapsed - lastUpdateRef.current < 0.15) return;
+    lastUpdateRef.current = elapsed;
+
     const dist = camera.position.length();
+    if (dist <= 1e-8) {
+      setCameraMetrics({ distance: 0, azimuthal: 0, polar: 0 });
+      return;
+    }
+
     // Spherical coords
-    const phi = Math.acos(camera.position.y / dist);
+    const phi = Math.acos(Math.max(-1, Math.min(1, camera.position.y / dist)));
     const theta = Math.atan2(camera.position.z, camera.position.x);
     setCameraMetrics({ distance: dist, azimuthal: theta, polar: phi });
   });
@@ -131,14 +142,16 @@ function EdgeLabels({ vertices, edges, color }: { vertices: Vec3[]; edges: reado
 
 // ─── Octahedron helper ────────────────────────────────────────────────────────
 
-function OctahedronMesh({ vertices, edges, color, faceOpacity, wireframeOpacity, useMeshBasicMaterial }: {
+function OctahedronMesh({ vertices, faces, edges, color, faceOpacity, wireframeOpacity, useMeshBasicMaterial }: {
   vertices: Vec3[];
+  faces: readonly (readonly [number, number, number])[];
   edges: readonly (readonly [number, number])[];
   color: string;
   faceOpacity: number;
   wireframeOpacity: number;
   useMeshBasicMaterial: boolean;
 }) {
+  const faceGeo = useMemo(() => buildFaceGeometry(vertices, faces), [vertices, faces]);
   const edgeGeo = useMemo(() => buildEdgeGeometry(vertices, edges), [vertices, edges]);
 
   return (
@@ -146,8 +159,7 @@ function OctahedronMesh({ vertices, edges, color, faceOpacity, wireframeOpacity,
       <lineSegments geometry={edgeGeo} renderOrder={3}>
         <lineBasicMaterial color={color} transparent opacity={wireframeOpacity} />
       </lineSegments>
-      <mesh renderOrder={0}>
-        <octahedronGeometry args={[vertices[0][0], 0]} />
+      <mesh geometry={faceGeo} renderOrder={0}>
         {useMeshBasicMaterial ? (
           <meshBasicMaterial color={color} transparent opacity={faceOpacity} side={THREE.DoubleSide} depthWrite={false} />
         ) : (
@@ -198,7 +210,7 @@ function StarField() {
 
 // ─── Auto-spin wrapper ────────────────────────────────────────────────────────
 
-type AutoSpinProps = { controlsRef: React.RefObject<OrbitControlsImpl>; enabled: boolean };
+type AutoSpinProps = { controlsRef: RefObject<OrbitControlsImpl>; enabled: boolean };
 
 function AutoSpinUpdater({ controlsRef, enabled }: AutoSpinProps) {
   useFrame(() => {
@@ -234,8 +246,8 @@ function MerkabaScene() {
   const colorCube = themeConfig.cubeColor;
 
   const showWireframe = layers.wireframeMerkaba;
-  const showFacesA = layers.solidTransparentFaces && (layers.twoTetrahedraColoredSeparately || layers.wireframeMerkaba);
-  const showFacesB = layers.solidTransparentFaces && (layers.twoTetrahedraColoredSeparately || layers.wireframeMerkaba);
+  const showFacesA = layers.solidTransparentFaces;
+  const showFacesB = layers.solidTransparentFaces;
 
   return (
     <>
@@ -303,6 +315,7 @@ function MerkabaScene() {
       {layers.innerOctahedron && (
         <OctahedronMesh
           vertices={geometry.innerOctahedron.vertices}
+          faces={geometry.innerOctahedron.faces}
           edges={geometry.innerOctahedron.edges}
           color={colorOcta}
           faceOpacity={0.12}

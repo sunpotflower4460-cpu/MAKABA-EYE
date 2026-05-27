@@ -44,7 +44,7 @@ export type ValidationCheckId =
   | 'dihedral-angle-A'
   | 'dihedral-angle-B'
   | 'scale-invariance'
-  | 'panel-sync';
+  | 'geometry-self-consistency';
 
 export type ValidationCheck = {
   id: ValidationCheckId;

@@ -1,6 +1,7 @@
 import type { Vec3, MerkabaGeometry, ValidationCheck, ValidationSummary, ValidationCheckId } from './types';
 import { dist, centroid, tetraDihedralAngle } from './merkaba';
 import { buildCanonicalMerkaba } from './merkaba';
+import { computeGeometrySummary } from './metrics';
 
 const DEFAULT_EPSILON = 1e-6;
 
@@ -62,19 +63,24 @@ export function validateEqualEdgeLengths(
   ] as const;
   const lengths = edges.map(([a, b]) => dist(verts[a], verts[b]));
   const expected = lengths[0];
+  let minLen = lengths[0];
+  let maxLen = lengths[0];
   let maxDelta = 0;
   for (const l of lengths) {
+    if (l < minLen) minLen = l;
+    if (l > maxLen) maxLen = l;
     const d = Math.abs(l - expected);
     if (d > maxDelta) maxDelta = d;
   }
   const threshold = posEps(epsilon, scale);
-  return check(
-    checkId,
-    expected,
-    expected + maxDelta,
-    threshold,
+  return {
+    id: checkId,
+    ok: maxDelta <= threshold,
+    expected: expected.toFixed(8),
+    actual: `min=${minLen.toFixed(8)}, max=${maxLen.toFixed(8)}`,
+    delta: maxDelta,
     epsilon,
-  );
+  };
 }
 
 /** Both tetrahedra must share centroid at origin */
@@ -216,29 +222,28 @@ export function validateScaleInvariance(
 }
 
 /**
- * Verify panel data is derived from the same geometry object, not from
- * a separate constant array. We do this by cross-checking a sample of
- * vertex coords match between panelData.tetraAVertices and geometry.tetrahedra[0].vertices.
+ * Verify the derived geometry summary remains consistent with the geometry object.
+ * This is a runtime self-consistency check, not a UI integration test.
  */
-export function validateSourceConsistency(
+export function validateGeometrySelfConsistency(
   geometry: MerkabaGeometry,
-  panelVerticesA: Vec3[],
-  panelVerticesB: Vec3[],
+  summaryVerticesA: Vec3[],
+  summaryVerticesB: Vec3[],
   epsilon = DEFAULT_EPSILON,
   scale = 1,
 ): ValidationCheck {
   const threshold = posEps(epsilon, scale);
   let maxD = 0;
   for (let i = 0; i < geometry.tetrahedra[0].vertices.length; i++) {
-    const d = dist(geometry.tetrahedra[0].vertices[i], panelVerticesA[i]);
+    const d = dist(geometry.tetrahedra[0].vertices[i], summaryVerticesA[i]);
     if (d > maxD) maxD = d;
   }
   for (let i = 0; i < geometry.tetrahedra[1].vertices.length; i++) {
-    const d = dist(geometry.tetrahedra[1].vertices[i], panelVerticesB[i]);
+    const d = dist(geometry.tetrahedra[1].vertices[i], summaryVerticesB[i]);
     if (d > maxD) maxD = d;
   }
   return {
-    id: 'panel-sync',
+    id: 'geometry-self-consistency',
     ok: maxD <= threshold,
     expected: '0.000000',
     actual: maxD.toFixed(8),
@@ -255,6 +260,7 @@ export function runAllValidations(
 ): ValidationSummary {
   const { tetrahedra, outerCube, innerOctahedron, scale, metrics } = geometry;
   const [tA, tB] = tetrahedra;
+  const summary = computeGeometrySummary(geometry);
 
   const checks: ValidationCheck[] = [
     validateEqualEdgeLengths(tA.vertices, 'A', epsilon, scale),
@@ -266,7 +272,7 @@ export function runAllValidations(
     validateDihedralAngle(tA.vertices, 'A', metrics.tetrahedronDihedralRad, epsilon),
     validateDihedralAngle(tB.vertices, 'B', metrics.tetrahedronDihedralRad, epsilon),
     validateScaleInvariance(geometry, scale * 2, epsilon),
-    validateSourceConsistency(geometry, tA.vertices, tB.vertices, epsilon, scale),
+    validateGeometrySelfConsistency(geometry, summary.tetraAVertices, summary.tetraBVertices, epsilon, scale),
   ];
 
   const ok = checks.every(c => c.ok);

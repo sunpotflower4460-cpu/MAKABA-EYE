@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useMerkabaStore } from '../state/useMerkabaState';
 import { computeGeometrySummary, fmt, fmtVec3 } from '../geometry/metrics';
 
@@ -69,7 +70,7 @@ export function GeometryPanel() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
       <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1 border-b border-gray-700 pb-1">
