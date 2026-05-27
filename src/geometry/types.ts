@@ -41,7 +41,8 @@ export type ValidationCheckId =
   | 'cube-correspondence'
   | 'origin-center'
   | 'inner-octahedron'
-  | 'dihedral-angle'
+  | 'dihedral-angle-A'
+  | 'dihedral-angle-B'
   | 'scale-invariance'
   | 'panel-sync';
 

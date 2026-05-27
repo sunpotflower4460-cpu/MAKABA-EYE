@@ -189,7 +189,7 @@ export function tetraDihedralAngle(verts: Vec3[]): number {
   const n2 = faceNormal(v0, v1, v3);
   const dot = n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2];
   // clamp for numerical safety
-  return Math.acos(Math.max(-1, Math.min(1, -dot)));
+  return Math.acos(Math.max(-1, Math.min(1, Math.abs(dot))));
 }
 
 function faceNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {

@@ -185,11 +185,12 @@ export function validateOriginCenter(
 /** Dihedral angle of tetrahedron must equal acos(1/3) */
 export function validateDihedralAngle(
   verts: Vec3[],
+  id: 'A' | 'B',
   expectedRad: number,
   epsilon = DEFAULT_EPSILON,
 ): ValidationCheck {
   const actual = tetraDihedralAngle(verts);
-  return check('dihedral-angle', expectedRad, actual, epsilon, epsilon, 10);
+  return check(id === 'A' ? 'dihedral-angle-A' : 'dihedral-angle-B', expectedRad, actual, epsilon, epsilon, 10);
 }
 
 /** Geometry scaled by k must preserve all ratios */
@@ -262,7 +263,8 @@ export function runAllValidations(
     validateOriginCenter(tA.vertices, tB.vertices, epsilon, scale),
     validateCubeCorrespondence(tA.vertices, tB.vertices, outerCube.vertices, epsilon, scale),
     validateInnerOctahedronVertices(innerOctahedron.vertices, scale, epsilon),
-    validateDihedralAngle(tA.vertices, metrics.tetrahedronDihedralRad, epsilon),
+    validateDihedralAngle(tA.vertices, 'A', metrics.tetrahedronDihedralRad, epsilon),
+    validateDihedralAngle(tB.vertices, 'B', metrics.tetrahedronDihedralRad, epsilon),
     validateScaleInvariance(geometry, scale * 2, epsilon),
     validateSourceConsistency(geometry, tA.vertices, tB.vertices, epsilon, scale),
   ];
